@@ -2,6 +2,13 @@
 # Given multiple expressions and operations,
 # you must produce a specified number
 
+## TO-DO LIST
+
+'''
+1. Scoring system
+2. Clock, Feedback position Rearrangement
+'''
+
 import pygame,sys,random
 from operator import attrgetter
 from pygame.locals import *
@@ -21,7 +28,7 @@ RED = (255,0,0)
 ################
 
 op_lst = ['+','-','*','/']
-num_lst = [str(x) for x in range(101)]
+num_lst = [str(x) for x in range(100)]
 
 
 #######################
@@ -161,12 +168,18 @@ def choice_click_update(eval_str,choice,counter,choice_group,selected_group,plac
     return eval_str,counter
 
 
+
+
+
+
 def eval_wrong(back_track_lst,selected_group):
     '''
     Re-places the selected choices to their
     original positions
     '''
     sorted_selected_group_lst = sorted(selected_group.sprites(),key=lambda x:x.rect.topleft)
+    print("sorted_selected_group_lst: "+str(len(sorted_selected_group_lst)))
+    print("back_track_lst: "+str(len(back_track_lst)))
     for i in range(len(back_track_lst)):
         sorted_selected_group_lst[i].rect.topleft = tuple(back_track_lst[i])
 
@@ -225,16 +238,22 @@ class Choice(pygame.sprite.Sprite):
         text
         '''
         self.image = font.render(self.string,False,GREY)
+        black_patch = pygame.Surface((self.width,self.height))
+        black_patch.fill(BLACK)
+        self.screen.blit(black_patch,self.start_pos)
         self.screen.blit(self.image,self.start_pos)
 
     def button_unhighlight(self):
 
         self.image = font.render(self.string,False,WHITE)
+        black_patch = pygame.Surface((self.width,self.height))
+        black_patch.fill(BLACK)
+        self.screen.blit(black_patch,self.start_pos)
         self.screen.blit(self.image,self.start_pos)
 
     def update_click(self,old_pos,new_pos):
 
-        self.rect.center = (new_pos[0]+62/2,new_pos[1]+67/2.)
+        self.rect.center = (new_pos[0]+79/2.,new_pos[1]+67/2.)
         black_patch = pygame.Surface((self.width,self.height))
         black_patch.fill(BLACK)
         self.screen.blit(black_patch,old_pos)
@@ -342,9 +361,6 @@ def main_page():
         mouse_clicked = pygame.mouse.get_pressed()
         pygame.display.update()
         
-        
-            # pygame.display.update()
-        
 
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -362,7 +378,7 @@ def main_page():
                     elif event.type == MOUSEBUTTONUP:
                         accuracy_mode(BLACK,WHITE,GREY,
                                       op_lst,num_lst,op_dic,rev_op_dic,
-                                      back_track_lst,choice_group,
+                                      choice_group,
                                       selected_group,eqn_group,timer_group,(i+2)**2)
                 else:
                     screen.blit(options_lst[i],options_pos_lst[i])
@@ -379,7 +395,7 @@ def instruct_page():
     expl_font = pygame.font.SysFont("Comic Sans MS",40)
     expl_title = expl_title_font.render("How To Play",True,WHITE)
     line1 = expl_font.render("1. Choose one of the modes you wish to play",True,WHITE)
-    line2 = expl_font.render("2. Click all choices to complete a given expression",True,WHITE)
+    line2 = expl_font.render("2. Click all choices to complete a given equation",True,WHITE)
     line3 = expl_font.render("3. Try to complete it before the time runs out!",True,WHITE)
     main_menu = expl_font.render("Main Menu",True,WHITE)
     main_menu_cursor = expl_font.render("Main Menu",True,GREY)
@@ -426,8 +442,11 @@ def instruct_page():
 ######################
 
 
-def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,back_track_lst,
+def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,
                   choice_group,selected_group,eqn_group,timer_group,game_num):
+
+
+    # Clearing screen
 
     screen.fill(BLACK)
 
@@ -436,6 +455,27 @@ def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,back_track_l
 # Initialization: Variables #
 #############################
     
+    # back_track_lst
+
+    back_track_lst = []
+
+
+    # Initializing Clear button
+    
+    clear_start_pos = (900,100)
+    clear_button = font.render("CLEAR",True,WHITE)
+    screen.blit(clear_button,clear_start_pos)
+    clear_button_cursor = font.render("CLEAR",True,GREY)
+
+    # Initializing Main Menu button
+
+    
+    main_menu = font.render("Main Menu",True,WHITE)
+    main_menu_pos = (screen.get_width()/2.-main_menu.get_width()/2.,550)
+    screen.blit(main_menu,main_menu_pos)
+    main_menu_cursor = font.render("Main Menu",True,GREY)
+
+    # Initializing Choice and Place blocks
 
     check = False
 
@@ -443,7 +483,6 @@ def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,back_track_l
     num_places = num_op*2+1
 
     while not check:
-        # print('loop again')
         chosen_lst = pick_choices(num_op)
         print(chosen_lst)
         try:
@@ -503,6 +542,7 @@ def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,back_track_l
 
     for j in range(len(places_pos_lst[:len(places_pos_lst)-2])):
         place = Place(screen,'__',places_pos_lst[j],WHITE)
+        print(place.rect)
         print(place.image.get_rect())
         eqn_group.add(place)
 
@@ -548,7 +588,7 @@ def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,back_track_l
 
     # Timer variable
 
-    second = 2000
+    second = 1000
 
     second_surface = font.render('0'+str(second)[0]+':'+str(second)[1:3],True,WHITE)
     screen.blit(second_surface,(250,150))
@@ -558,12 +598,36 @@ def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,back_track_l
     black_patch = pygame.Surface((second_surface.get_width()+20,second_surface.get_height()+20))
     black_patch.fill(BLACK)
 
+    # Black Patch to cover up Clear button
+
+    black_patch_clear = pygame.Surface((clear_button.get_width(),clear_button.get_height()))
+    black_patch_clear.fill(BLACK)
+
+    # Black Patch to cover up Main Menu button
+
+    black_patch_main_menu = pygame.Surface((main_menu.get_width(),main_menu.get_height()))
+    black_patch_main_menu.fill(BLACK)    
+
+    # Initializing Wrong Feedback Message
+
+    wrong_feedback = font.render("Try Again",True,WHITE)
+
+    # Black Patch to cover up wrong feedback
+
+    black_patch_wrong_feedback = pygame.Surface((wrong_feedback.get_width(),
+                                                wrong_feedback.get_height()))
+    screen.blit(black_patch_wrong_feedback,(50,25))
+
     pygame.display.update()
+
+
 #############
 # Game Loop #
 #############
+    
 
-    while True:
+
+    while check:
         
         mouse_pos = pygame.mouse.get_pos()
         mouse_clicked = pygame.mouse.get_pressed()
@@ -572,26 +636,74 @@ def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,back_track_l
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
-            for i in range(len(choices_pos_lst)):
-                choice = sorted_choice_lst[i]
-                if ((choices_pos_lst[i][0]<=mouse_pos[0]<=choices_pos_lst[i][0]+sorted_choice_lst[i].width) and 
-                    (choices_pos_lst[i][1]<=mouse_pos[1]<=choices_pos_lst[i][1]+sorted_choice_lst[i].height)):
-                    if not (selected_group.has(choice)):
-                        choice.button_highlight()
-                        if event.type == MOUSEBUTTONUP:
+
+            else:
+
+                for i in range(len(choices_pos_lst)):
+                    choice = sorted_choice_lst[i]
+                    if ((choices_pos_lst[i][0]<=mouse_pos[0]<=choices_pos_lst[i][0]+sorted_choice_lst[i].width) and 
+                        (choices_pos_lst[i][1]<=mouse_pos[1]<=choices_pos_lst[i][1]+sorted_choice_lst[i].height)):
+                        if not (selected_group.has(choice)):
+                            choice.button_highlight()
+                            if event.type == MOUSEBUTTONUP:
+                                choice.button_unhighlight()
+                                # pygame.display.update()
+                                back_track_lst.append(choice.rect.topleft)
+                                eval_str,counter = choice_click_update(eval_str,choice,counter,choice_group,selected_group,places_pos_lst)
+                    
+
+                    else:
+                        if not (selected_group.has(choice)):
                             choice.button_unhighlight()
-                            pygame.display.update()
-                            back_track_lst.append(choice.rect.topleft)
-                            eval_str,counter = choice_click_update(eval_str,choice,counter,choice_group,selected_group,places_pos_lst)
+
+                if (clear_start_pos[0]<=mouse_pos[0]<=clear_start_pos[0]+clear_button.get_width() and 
+                    clear_start_pos[1]<=mouse_pos[1]<=clear_start_pos[1]+clear_button.get_height()):
+                    
+                    screen.blit(black_patch_clear,clear_start_pos)
+                    screen.blit(clear_button_cursor,clear_start_pos) 
+                    if event.type == MOUSEBUTTONUP:
+                        eval_wrong(back_track_lst,selected_group)
+                        selected_group.clear(screen,bgd)
+                        selected_group.empty()
+                        back_track_lst = []
+                        eval_str = ''
+                        choice_group.clear(screen,bgd)
+                        eqn_group.draw(screen)
+                        choice_group.draw(screen)
+                        eqn_group.draw(screen)
+                        counter = 0
+
+
+                elif (main_menu_pos[0]<=mouse_pos[0]<=main_menu_pos[0]+main_menu.get_width() and 
+                    main_menu_pos[1]<=mouse_pos[1]<=main_menu_pos[1]+main_menu.get_height()):
+                    
+                    screen.blit(black_patch_main_menu,main_menu_pos)
+                    screen.blit(main_menu_cursor,main_menu_pos) 
+                    if event.type == MOUSEBUTTONUP:
+                        back_track_lst = []
+                        choice_group.empty()
+                        selected_group.empty()
+                        eqn_group.empty()
+                        timer_group.empty()
+                        main_page()
+
+                
                 else:
-                    if not (selected_group.has(choice)):
-                        choice.button_unhighlight()
+                    screen.blit(black_patch_clear,clear_start_pos)
+                    screen.blit(black_patch_main_menu,main_menu_pos)
+
+                    screen.blit(clear_button,clear_start_pos)
+                    screen.blit(main_menu,main_menu_pos)
+
+
+
 
         if counter == len(sorted_choice_lst):
             if check_eval(eval_str,value):
                 game_num -= 1
                 if game_num == 0:
-                    screen.blit(font.render("GENIUS!",True,WHITE),(50,100))
+                    screen.blit(black_patch_wrong_feedback,(50,25))
+                    screen.blit(font.render("GENIUS!",True,WHITE),(50,25))
                     pygame.display.update()
                     while True:
                         for event in pygame.event.get():
@@ -600,30 +712,40 @@ def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,back_track_l
                                 sys.exit()
                 else:
                     screen.fill(BLACK)
-                    accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,[],
-                      pygame.sprite.Group(),pygame.sprite.Group(),pygame.sprite.Group(),
-                      pygame.sprite.Group(),game_num)
+                    back_track_lst = []
+                    choice_group.empty()
+                    selected_group.empty()
+                    eqn_group.empty()
+                    accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,
+                                  choice_group,selected_group,
+                                  eqn_group,timer_group,game_num)
+        
             else:
-                print('wrong!')
                 eval_wrong(back_track_lst,selected_group)
-                screen.blit(font.render("YOU DUMB!",True,WHITE),(50,100))
+                screen.blit(wrong_feedback,(50,25))
                 selected_group.clear(screen,bgd)
                 selected_group.empty()
                 back_track_lst = []
                 eval_str = ''
+                choice_group.clear(screen,bgd)
                 choice_group.draw(screen)
+                eqn_group.clear(screen,bgd)
                 eqn_group.draw(screen)
                 counter = 0
-                pygame.display.update()
+                # pygame.display.update()
+        second -= .5
         if second < 10:
             second = '0'
             second_surface = font.render('00:0'+second,True,WHITE)
+            screen.blit(second_surface,(250,150))
+            pygame.display.update()
+            check = False
         elif second < 100:
             second_surface = font.render('00:0'+str(second)[:1],True,WHITE)
         else:
-            if second == 1000:
+            if second == 999.5:
                 second = 600
-            elif second == 2000:
+            elif second == 1999.5:
                 second = 1600
             else:
                 if second >= 600:
@@ -632,19 +754,35 @@ def accuracy_mode(BLACK,WHITE,GREY,op_lst,num_lst,op_dic,rev_op_dic,back_track_l
                     second_surface = font.render('00:'+str(second)[:2],True,WHITE)
         screen.blit(black_patch,(250,150))
         screen.blit(second_surface,(250,150))
-        pygame.display.update()
-        if second == '0':
-            break
-        second -= 1
+        
     if not check_eval(eval_str,value):
-        screen.blit(font.render('Time Out',True,WHITE),(50,100))
-        pygame.display.update()
+        screen.blit(black_patch_wrong_feedback,(50,25))
+        screen.blit(font.render('Time Out',True,WHITE),(50,25))
+
+        # print(main_menu.get_rect()) #(451~749,550~635)
+        # print(main_menu_pos)
         while True:
+            pygame.display.update()
+            mouse_pos = pygame.mouse.get_pos()
             for event in pygame.event.get():
                 if event.type == QUIT:
                     pygame.quit()
                     sys.exit()
-    pygame.display.update()
+                elif (main_menu_pos[0]<=mouse_pos[0]<=main_menu_pos[0]+main_menu.get_width() and 
+                    main_menu_pos[1]<=mouse_pos[1]<=main_menu_pos[1]+main_menu.get_height()):
+                    screen.blit(black_patch_main_menu,main_menu_pos)
+                    screen.blit(main_menu_cursor,main_menu_pos) 
+                    if event.type == MOUSEBUTTONUP:
+                        back_track_lst = []
+                        choice_group.empty()
+                        selected_group.empty()
+                        eqn_group.empty()
+                        timer_group.empty()
+                        main_page()
+                else:
+                    screen.blit(black_patch_main_menu,main_menu_pos)
+                    screen.blit(main_menu,main_menu_pos)
+
 
 
 # if __name__ == "__main__":
